@@ -57,3 +57,11 @@ Suggested keymap:
 ```lua
 vim.keymap.set("n", "<leader>g", function() require("shuck").toggle({}) end)
 ```
+
+## Related plugins
+
+Other neovim plugins by [dlants](https://github.com/dlants):
+
+- [magenta.nvim](https://github.com/dlants/magenta.nvim) — transparent tools for agentic AI workflows.
+- [needle](https://github.com/dlants/needle) — a fast, signal-aware fuzzy picker.
+- [glean](https://github.com/dlants/glean) — a git diff reviewer in a single foldable buffer.
