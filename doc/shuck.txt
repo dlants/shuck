@@ -1,0 +1,72 @@
+*shuck.txt*            A streamed shell-command picker for neovim (live-grep)
+
+==============================================================================
+INTRODUCTION                                                           *shuck*
+
+shuck is a streamed shell-command picker for neovim (a vim-grepper / live-grep
+replacement), rendered in plain splits: a prompt window plus a results window.
+You edit an arbitrary shell command in the prompt; its stdout/stderr stream
+live into the results window as it runs.
+
+shuck has no external dependencies and requires Neovim 0.12+.
+
+==============================================================================
+COMMANDS                                                      *shuck-commands*
+
+                                                                      *:Shuck*
+:Shuck                  Open the picker.
+
+The default command is `rg -H --no-heading --vimgrep ` -- type your pattern
+after it and run. The search root is picked from the current buffer (cwd if
+the buffer is under it, else the nearest git root, else the buffer's
+directory).
+
+Per-directory command history is persisted under `stdpath("data")/shuck/`.
+
+==============================================================================
+KEYMAPS                                                        *shuck-keymaps*
+
+Inside the picker:
+
+  <C-CR>            run the command in the prompt
+  <CR>              open the selected result
+  <C-x> / <C-v> / <C-t>  open in split / vsplit / tab
+  <C-j> / <C-k>     next / previous result
+  <C-d> / <C-u>     jump 10 down / up
+  <Up> / <Down>     cycle prefix-matched command history
+  <C-r>             open the history picker
+  q                 send results to the quickfix list
+  <Esc> / <C-c>     close
+
+==============================================================================
+SETUP                                                            *shuck-setup*
+
+                                                              *shuck.setup()*
+Call `require("shuck").setup({})` to configure shuck. Defaults: >lua
+
+    require("shuck").setup({
+      default_cmd     = "rg -H --no-heading --vimgrep ",
+      max_render      = 200,
+      max_results     = 10000,
+    })
+<
+                                                                 *default_cmd*
+        The shell command pre-filled in the prompt.
+        Default: `rg -H --no-heading --vimgrep `
+
+                                                                  *max_render*
+        Maximum number of results rendered in the results window.
+        Default: 200
+
+                                                                 *max_results*
+        Maximum number of results retained.
+        Default: 10000
+
+Suggested keymap: >lua
+
+    vim.keymap.set("n", "<leader>g", function()
+      require("shuck").toggle({})
+    end)
+<
+
+vim:tw=78:ts=8:ft=help:norl:
