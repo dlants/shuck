@@ -55,6 +55,25 @@ local function set_title()
   pcall(api.nvim_set_option_value, "winbar", title, { win = state.results_win })
 end
 
+local function capture_win_heights()
+  local heights = {}
+  for _, win in ipairs(api.nvim_tabpage_list_wins(0)) do
+    if api.nvim_win_get_config(win).relative == "" then
+      heights[win] = api.nvim_win_get_height(win)
+    end
+  end
+  return heights
+end
+
+local function restore_win_heights(heights)
+  if not heights then return end
+  for win, h in pairs(heights) do
+    if api.nvim_win_is_valid(win) then
+      pcall(api.nvim_win_set_height, win, h)
+    end
+  end
+end
+
 local function close_picker()
   if not state then return end
   pcall(vim.cmd, "stopinsert")
@@ -73,7 +92,9 @@ local function close_picker()
   for _, buf in ipairs({ state.prompt_buf, state.results_buf }) do
     if buf and api.nvim_buf_is_valid(buf) then pcall(api.nvim_buf_delete, buf, { force = true }) end
   end
+  local saved_heights = state.saved_heights
   state = nil
+  restore_win_heights(saved_heights)
 end
 
 local function discover_search_dir(opts_cwd, buf_name)
@@ -525,6 +546,7 @@ end
 -- ============================================================================
 
 local function open_windows()
+  local saved_heights = capture_win_heights()
   local total_h = vim.o.lines
   local picker_height = math.max(math.floor(total_h * 0.3), 6)
   local results_height = picker_height - 1
@@ -553,7 +575,7 @@ local function open_windows()
 
   api.nvim_set_current_win(prompt_win)
 
-  return prompt_buf, prompt_win, results_buf, results_win
+  return prompt_buf, prompt_win, results_buf, results_win, saved_heights
 end
 
 local function setup_keymaps(prompt_buf)
@@ -632,10 +654,11 @@ function M.open(opts)
   -- Capture the originating buffer name now (cheap); the picker's own buffer
   -- is focused by the time we resolve the search root.
   local origin_buf_name = api.nvim_buf_get_name(api.nvim_get_current_buf())
-  local prompt_buf, prompt_win, results_buf, results_win = open_windows()
+  local prompt_buf, prompt_win, results_buf, results_win, saved_heights = open_windows()
 
   state = {
     prompt_buf      = prompt_buf,
+    saved_heights   = saved_heights,
     prompt_win      = prompt_win,
     results_buf     = results_buf,
     results_win     = results_win,
